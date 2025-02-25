@@ -111,7 +111,7 @@ def gen_suggestions():
     }
 
     response = requests.post(f'{url}/api/generate', json=req_body, stream=True)
-    def stream_responsder():
+    def stream_responder():
         global thinking
         global reasoning_model
 
@@ -134,7 +134,7 @@ def gen_suggestions():
             # yield chunk['response']
             yield json.dumps(chunk)
         
-    return Response(stream_responsder(), mimetype='application/json')
+    return Response(stream_responder(), mimetype='application/json')
 
 @app.route('/api/translate/<method>', methods=['POST'])
 def translate(method):
