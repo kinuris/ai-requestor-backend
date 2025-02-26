@@ -36,7 +36,7 @@ def query():
     prompt_data = ""
     for record in data['data']:
         translator = translators.PlainTextTranslator(record['table'], record['data'], fields=record['fields'] if 'fields' in record else '*')
-        prompt_data += f'{translator.translate()}\n'
+        prompt_data += f'{translator.translate()}\n\n'
 
     # Prepare request to Ollama AI service
     url = os.getenv('OLLAMA_AI_LOCAL_URL') 
@@ -86,7 +86,7 @@ def query():
             yield json.dumps(chunk)
 
     # Return streaming response
-    return Response(stream_responsder(), mimetype='application/json')
+    return Response(stream_responsder(), mimetype='text/event-stream')
 
 @app.route('/api/schema/ai-suggest', methods=['POST'])
 def schema_gen_suggestions():
