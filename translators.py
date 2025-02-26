@@ -31,3 +31,9 @@ class PlainTextTranslator:
 
         return result
             
+class SchemaToPlainTextTranslator:
+    def __init__(self, schema):
+        self.schema = schema
+
+    def translate(self):
+        pass

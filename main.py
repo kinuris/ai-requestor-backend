@@ -96,25 +96,23 @@ def schema_gen_suggestions():
 def gen_suggestions():
     try:
         data = request.get_json()
-        if 'data' not in data:
-            return { 'error': 'Missing required fields : ["data"]' }, 400
+        if 'schema' not in data:
+            return { 'error': 'Missing required fields : ["schema"]' }, 400
     except:
         return { 'error': 'Invalid JSON in request body' }, 400
     
-    prompt_data = ""
-    for record in data['data']:
-        translator = translators.PlainTextTranslator(record['table'], record['data'], fields=record['fields'] if 'fields' in record else '*')
+    # prompt_data = ""
+    # for record in data['data']:
+    #     translator = translators.PlainTextTranslator(record['table'], record['data'], fields=record['fields'] if 'fields' in record else '*')
 
-        prompt_data += f'{translator.translate()}\n'
+    #     prompt_data += f'{translator.translate()}\n'
+
+    prompt_data = json.dumps(data['schema'])
 
     url = os.getenv('OLLAMA_AI_LOCAL_URL') 
     req_body = {
         'model': os.getenv('OLLAMA_AI_MODEL_SUGGESTION'),
-        'prompt': """
-        Pretend that you are a user, what are some prompts that you would 
-        like, as a user, to see from the data below (RETURN THE PROMPTS YOU WOULD LIKE TO SEE AS A 
-        USER IN THE FORM OF A STRING IN A JSON LIST OF SUGGESTIONS THE FORMAT OF THE JSON ARRAY SHOULD BE ["suggestion 1", "suggestion 2", "suggestion 3", ...]):
-        """ + '\n\n' + prompt_data, 
+        'prompt': prompt_data, 
     }
 
     response = requests.post(f'{url}/api/generate', json=req_body, stream=True)
@@ -133,7 +131,14 @@ def gen_suggestions():
                 thinking = True
                 reasoning_model = True
             elif '</think>' in chunk['response']:
+                chunk['thinking'] = thinking 
+                chunk['reasoning_model'] = reasoning_model
+
+                yield json.dumps(chunk)
+
                 thinking = False 
+
+                continue 
 
             chunk['thinking'] = thinking 
             chunk['reasoning_model'] = reasoning_model 
