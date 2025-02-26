@@ -70,7 +70,14 @@ def query():
                 thinking = True
                 reasoning_model = True
             elif '</think>' in chunk['response']:
+                chunk['thinking'] = thinking 
+                chunk['reasoning_model'] = reasoning_model
+
+                yield json.dumps(chunk)
+
                 thinking = False 
+
+                continue
 
             # Add state flags to response
             chunk['thinking'] = thinking 
