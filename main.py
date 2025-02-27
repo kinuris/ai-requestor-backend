@@ -86,7 +86,7 @@ def query():
             yield json.dumps(chunk)
 
     # Return streaming response
-    return Response(stream_responsder(), mimetype='text/event-stream')
+    return Response(stream_responsder(), mimetype='application/json')
 
 @app.route('/api/schema/ai-suggest', methods=['POST'])
 def schema_gen_suggestions():
