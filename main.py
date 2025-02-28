@@ -105,6 +105,9 @@ def query():
         'prompt': data['prompt'] + '\n\n' + prompt_data, 
     }
 
+    # Check if this is a text-only response request
+    is_text = data.get('text', False)
+
     # Make request to AI service
     response = requests.post(f'{url}/api/generate', json=req_body, stream=True)
     
@@ -133,7 +136,7 @@ def query():
                 chunk['thinking'] = thinking 
                 chunk['reasoning_model'] = reasoning_model
 
-                yield json.dumps(chunk)
+                yield chunk['response'] if is_text else json.dumps(chunk)
 
                 thinking = False 
 
@@ -143,7 +146,7 @@ def query():
             chunk['thinking'] = thinking 
             chunk['reasoning_model'] = reasoning_model 
 
-            yield json.dumps(chunk)
+            yield chunk['response'] if is_text else json.dumps(chunk)
 
     # Return streaming response
     return Response(stream_responsder(), mimetype='application/json')
