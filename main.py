@@ -78,7 +78,7 @@ def schema_query():
             chunk['thinking'] = thinking 
             chunk['reasoning_model'] = reasoning_model 
 
-            yield chunk['response'] 
+            yield json.dumps(chunk) 
 
     return Response(stream_responder(), mimetype='application/json')
 
