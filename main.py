@@ -16,11 +16,71 @@ print("\n")
 print(f"LOCAL_URL: {os.getenv('OLLAMA_AI_LOCAL_URL')}")
 print(f"AI_MODEL: {os.getenv('OLLAMA_AI_MODEL')}")
 print(f"AI_MODEL_SUGGESTION: {os.getenv('OLLAMA_AI_MODEL_SUGGESTION')}")
+print(f"OLLAMA_AI_SQLGEN: {os.getenv('OLLAMA_AI_SQLGEN')}")
 print("\n")
 
 @app.route('/api/schema/ai-query', methods=['POST'])
 def schema_query():
-    pass
+    try:
+        data = request.get_json()
+        if 'schema' not in data or 'prompt' not in data:
+            return {'error': 'Missing required fields: schema and prompt'}, 400
+    except:
+        return {'error': 'Invalid JSON in request body'}, 400
+
+    response_str = f"Prompt: {data['prompt']} \n\nDATABASE SCHEMA: \n\n"
+    
+    schema = data['schema']
+    for table, fields in schema.items():
+        table_str = f'{table}:\n'
+
+        for name, field_type in fields.items():
+            table_str += f' - {name}: {field_type}\n'
+
+        table_str += '\n'
+        response_str += table_str
+
+    # Check if this is just a "peek" request
+    if data.get('peek') == True:
+        return response_str
+
+    url = os.getenv('OLLAMA_AI_LOCAL_URL')
+    req_body = {
+        'model': os.getenv('OLLAMA_AI_SQLGEN'),
+        'prompt': response_str
+    }
+
+    response = requests.post(f'{url}/api/generate', json=req_body, stream=True)
+    def stream_responder():
+        global thinking
+        global reasoning_model
+
+        thinking = False
+        reasoning_model = False
+
+        for chunk in response.iter_lines():
+            chunk = codecs.decode(chunk, 'utf-8')
+            chunk = json.loads(chunk)
+
+            if '<think>' in chunk['response']:
+                thinking = True
+                reasoning_model = True
+            elif '</think>' in chunk['response']:
+                chunk['thinking'] = thinking 
+                chunk['reasoning_model'] = reasoning_model
+
+                yield json.dumps(chunk)
+
+                thinking = False 
+
+                continue 
+
+            chunk['thinking'] = thinking 
+            chunk['reasoning_model'] = reasoning_model 
+
+            yield chunk['response'] 
+
+    return Response(stream_responder(), mimetype='application/json')
 
 @app.route('/api/ai-query', methods=['POST'])
 def query():
