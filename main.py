@@ -50,6 +50,9 @@ def schema_query():
         'prompt': response_str
     }
 
+    # Check if this is a text-only response request
+    is_text = data.get('text', False)
+
     response = requests.post(f'{url}/api/generate', json=req_body, stream=True)
     def stream_responder():
         global thinking
@@ -69,7 +72,7 @@ def schema_query():
                 chunk['thinking'] = thinking 
                 chunk['reasoning_model'] = reasoning_model
 
-                yield json.dumps(chunk)
+                yield chunk['response'] if is_text else json.dumps(chunk)
 
                 thinking = False 
 
@@ -78,7 +81,7 @@ def schema_query():
             chunk['thinking'] = thinking 
             chunk['reasoning_model'] = reasoning_model 
 
-            yield json.dumps(chunk) 
+            yield chunk['response'] if is_text else json.dumps(chunk) 
 
     return Response(stream_responder(), mimetype='application/json')
 
