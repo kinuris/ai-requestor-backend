@@ -127,7 +127,7 @@ def query():
         reasoning_model = False
 
         # Process response chunks
-        for chunk in response.iter_lines(chunk=1024):
+        for chunk in response.iter_lines(chunk_size=1024):
             chunk = codecs.decode(chunk, 'utf-8')
             chunk = json.loads(chunk)
 
